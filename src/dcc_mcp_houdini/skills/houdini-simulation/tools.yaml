@@ -1,0 +1,97 @@
+tools:
+  - name: create_simulation_network
+    description: Create or reuse a DOP network and a typed Pyro, FLIP, RBD, or Vellum solver.
+    source_file: scripts/create_simulation_network.py
+    execution: sync
+    affinity: main
+    group: setup
+    read_only: false
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [parent_path, simulation_type]
+      properties:
+        parent_path:
+          type: string
+          description: Parent path such as /obj.
+        simulation_type:
+          type: string
+          enum: [pyro, flip, rbd, vellum]
+        network_name:
+          type: string
+          default: dopnet1
+        solver_name:
+          type: string
+        parameters:
+          type: object
+          description: Bounded Houdini parameter name to value overrides.
+  - name: configure_simulation_solver
+    description: Apply bounded parameter overrides to an existing simulation solver and optionally cook it.
+    source_file: scripts/configure_simulation_solver.py
+    execution: sync
+    affinity: main
+    group: setup
+    read_only: false
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [solver_path, parameters]
+      properties:
+        solver_path:
+          type: string
+        parameters:
+          type: object
+        cook:
+          type: boolean
+          default: false
+  - name: inspect_simulation_network
+    description: Inspect DOP children, solver types, parameter readback, errors, and timeline metadata.
+    source_file: scripts/inspect_simulation_network.py
+    execution: sync
+    affinity: main
+    group: inspect
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [network_path]
+      properties:
+        network_path:
+          type: string
+  - name: validate_simulation_setup
+    description: Validate that a DOP network contains the requested solver family and has no cook errors.
+    source_file: scripts/validate_simulation_setup.py
+    execution: sync
+    affinity: main
+    group: inspect
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [network_path]
+      properties:
+        network_path:
+          type: string
+        simulation_type:
+          type: string
+          enum: [pyro, flip, rbd, vellum]

@@ -1,0 +1,59 @@
+"""Create and wire a bounded COP filter node."""
+
+from __future__ import annotations
+
+from _cop_common import get_node, hou_missing_error, resolve_filter_type, set_parameters  # noqa: E402
+from dcc_mcp_core.skill import skill_entry, skill_exception, skill_success
+
+
+def create_cop_node(
+    network_path: str,
+    filter_type: str,
+    node_name: str = None,
+    input_nodes=None,
+    parameters=None,
+) -> dict:
+    try:
+        import hou  # noqa: PLC0415
+    except ImportError:
+        return hou_missing_error()
+    try:
+        network = get_node(hou, network_path)
+        node_type = resolve_filter_type(filter_type)
+        node = network.createNode(node_type, node_name=node_name)
+        applied, skipped = set_parameters(node, parameters)
+        wired = []
+        for index, input_path in enumerate(input_nodes or []):
+            source = hou.node(input_path)
+            if source is None and not str(input_path).startswith("/"):
+                source = network.node(str(input_path))
+            if source is None:
+                raise ValueError("COP input node not found: {}".format(input_path))
+            node.setInput(index, source)
+            wired.append({"input_index": index, "source_path": source.path()})
+        try:
+            network.layoutChildren()
+        except Exception:  # noqa: BLE001
+            pass
+        return skill_success(
+            "Created COP node",
+            network_path=network.path(),
+            node_path=node.path(),
+            node_type=node_type,
+            applied_parameters=applied,
+            skipped_parameters=skipped,
+            wired_inputs=wired,
+        )
+    except Exception as exc:
+        return skill_exception(exc, message="Failed to create COP node")
+
+
+@skill_entry
+def main(**kwargs) -> dict:
+    return create_cop_node(**kwargs)
+
+
+if __name__ == "__main__":
+    from dcc_mcp_core.skill import run_main
+
+    run_main(main)
