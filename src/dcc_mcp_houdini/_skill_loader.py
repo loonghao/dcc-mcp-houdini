@@ -30,12 +30,14 @@ STAGE_SKILLS: dict[str, Tuple[str, ...]] = {
         "houdini-geometry",
         "houdini-groom",
         "houdini-mesh-ops",
+        "houdini-vex",
         "houdini-camera-light",
         "houdini-materials",
         "houdini-lookdev",
         "houdini-hda",
         "houdini-material-library",
         "houdini-light-rig",
+        "houdini-copernicus",
     ),
     "interchange": (
         "houdini-interchange",
@@ -58,6 +60,8 @@ STAGE_SKILLS: dict[str, Tuple[str, ...]] = {
         "houdini-automation",
         "houdini-texture-bake",
         "houdini-gsplat-relighting",
+        "houdini-simulation",
+        "houdini-pdg",
     ),
 }
 

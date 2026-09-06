@@ -197,6 +197,10 @@ def test_stage_loader_maps_bootstrap_and_scene() -> None:
     assert "houdini-scene" in skills_for_stage("scene")
     assert "houdini-materials" in skills_for_stage("authoring")
     assert "houdini-groom" in skills_for_stage("authoring")
+    assert "houdini-vex" in skills_for_stage("authoring")
+    assert "houdini-copernicus" in skills_for_stage("authoring")
+    assert "houdini-simulation" in skills_for_stage("pipeline")
+    assert "houdini-pdg" in skills_for_stage("pipeline")
     cfg = build_minimal_mode_for_stages(["scene"])
     assert "houdini-scene" in cfg.skills
     assert "houdini-scripting" in cfg.skills

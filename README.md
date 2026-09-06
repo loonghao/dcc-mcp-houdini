@@ -326,7 +326,7 @@ manually with `tag_name=vX.Y.Z` and `publish_to_pypi=true`. Publishing uses
 PyPI trusted publishing when configured, or `PYPI_API_TOKEN` when that secret is
 available.
 
-## Bundled Skills (34 packages, 223 tools)
+## Bundled Skills (38 packages, 257 tools)
 
 Full authoritative index with ready-made task chains: `src/dcc_mcp_houdini/skills/SKILLS_INDEX.md`
 
@@ -351,6 +351,7 @@ Full authoritative index with ready-made task chains: `src/dcc_mcp_houdini/skill
 | `houdini-geometry` | `create_primitive`, `create_curve_guides`, `get_geometry_info`, `list_attributes`, `list_groups`, `get_cook_status` |
 | `houdini-groom` | `build_short_fur_groom` |
 | `houdini-mesh-ops` | `loft_sections`, `lathe_profile`, `extrude_faces`, `bevel_edges`, `inset`, `bridge_edges`, `boolean_op`, `add_edge_loop`, `array_instances`, `mirror`, `auto_uv`, `uv_project`, `transform_geometry`, `merge_geometry`, `blast_geometry`, `group_geometry`, `add_normals`, `triangulate_geometry`, `convert_geometry` |
+| `houdini-vex` | `create_wrangle`, `update_vex_snippet`, `validate_vex_syntax`, `cook_wrangle`, `diagnose_wrangle`, `get_vex_info`, `list_wrangles` |
 | `houdini-camera-light` | `list_cameras`, `create_camera`, `update_camera`, `frame_view`, `get_view_state`, `create_light`, `update_light` |
 | `houdini-materials` | `create_material`, `assign_material`, `build_materialx_pbr`, `validate_materialx_pbr` |
 | `houdini-lookdev` | `list_materials`, `list_assignments`, `get_material_parms`, `set_material_parms`, `get_shader_connections`, `connect_shader`, `disconnect_shader`, `reset_material`, `save_preset`, `list_presets`, `load_preset`, `delete_preset` |
@@ -362,6 +363,7 @@ Full authoritative index with ready-made task chains: `src/dcc_mcp_houdini/skill
 | `houdini-light-rig` | `create_three_point_light_rig`, `create_area_softbox`, `create_hdri_world`, `list_light_rigs`, `set_light_rig_intensity`, `aim_light_at_object`, `group_lights`, `set_render_view_transform`, `get_lighting_summary` |
 | `houdini-material-library` | `save_material_preset`, `list_material_presets`, `load_material_preset`, `delete_material_preset`, `get_shader_assignment`, `get_material_connections`, `set_material_attribute`, `assign_texture`, `list_images`, `reload_image`, `list_color_spaces`, `set_color_management` |
 | `houdini-texture-bake` | `list_bake_targets`, `bake_textures`, `bake_ambient_occlusion`, `bake_lighting`, `transfer_maps` |
+| `houdini-copernicus` | `create_cop_network`, `create_cop_node`, `inspect_cop_network`, `validate_cop_network` |
 
 ### interchange (load on demand)
 | Skill | Tools |
@@ -378,6 +380,8 @@ Full authoritative index with ready-made task chains: `src/dcc_mcp_houdini/skill
 | `houdini-husk` | `render_with_husk`, `get_husk_job`, `cancel_husk_job`, `create_checkpoint`, `create_snapshot`, `set_husk_options` |
 | `houdini-animation` | `get_timeline`, `set_timeline`, `set_keyframe`, `get_keyframes`, `delete_keyframes`, `list_animated_parms`, `validate_loop_contract`, `get_channel_info`, `export_channels`, `import_channels`, `bake_channels`, `cache_simulation` |
 | `houdini-hda-automation` | `scan_hda_libraries`, `inspect_hda_definition`, `instantiate_hda`, `validate_hda`, `cook_top_network`, `execute_rop_chain` |
+| `houdini-pdg` | `create_pdg_network`, `create_pdg_node`, `connect_pdg_nodes`, `inspect_pdg_graph`, `cook_pdg_graph` |
+| `houdini-simulation` | `create_simulation_network`, `configure_simulation_solver`, `inspect_simulation_network`, `validate_simulation_setup` |
 | `houdini-pipeline` | `set_project`, `get_project`, `tag_asset_metadata`, `get_asset_metadata`, `validate_scene`, `collect_dependencies`, `export_shot_package` |
 | `houdini-dev` | `attach_project`, `reload_modules`, `run_entrypoint`, `run_script`, `start_debugpy`, `introspect_hom`, `ui_snapshot`, `ui_action` |
 | `houdini-automation` | `run_python_file`, `set_frame_range`, `save_hip_file`, `load_hip_file`, `build_node_chain` |

@@ -1,0 +1,91 @@
+tools:
+  - name: create_cop_network
+    description: Create or reuse a COP/Copernicus image-processing network.
+    source_file: scripts/create_cop_network.py
+    execution: sync
+    affinity: main
+    group: network
+    read_only: false
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [parent_path]
+      properties:
+        parent_path:
+          type: string
+          description: Parent image context such as /img.
+        network_name:
+          type: string
+          default: copnet1
+  - name: create_cop_node
+    description: Create a typed COP filter node, set bounded parameters, and wire existing input nodes.
+    source_file: scripts/create_cop_node.py
+    execution: sync
+    affinity: main
+    group: authoring
+    read_only: false
+    destructive: false
+    idempotent: false
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: false
+    input_schema:
+      type: object
+      required: [network_path, filter_type]
+      properties:
+        network_path:
+          type: string
+        filter_type:
+          type: string
+          description: Alias or Houdini COP node type.
+        node_name:
+          type: string
+        input_nodes:
+          type: array
+          items: {type: string}
+        parameters:
+          type: object
+  - name: inspect_cop_network
+    description: Inspect COP children and input connections without cooking or mutating the network.
+    source_file: scripts/inspect_cop_network.py
+    execution: sync
+    affinity: main
+    group: inspect
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [network_path]
+      properties:
+        network_path:
+          type: string
+  - name: validate_cop_network
+    description: Validate COP node cook errors and missing input references.
+    source_file: scripts/validate_cop_network.py
+    execution: sync
+    affinity: main
+    group: inspect
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [network_path]
+      properties:
+        network_path:
+          type: string

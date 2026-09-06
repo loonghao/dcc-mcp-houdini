@@ -1,0 +1,122 @@
+tools:
+  - name: create_pdg_network
+    description: Create or reuse a TOP network container.
+    source_file: scripts/create_pdg_network.py
+    execution: sync
+    affinity: main
+    group: network
+    read_only: false
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [parent_path]
+      properties:
+        parent_path:
+          type: string
+        network_name:
+          type: string
+          default: topnet1
+  - name: create_pdg_node
+    description: Create a TOP node, set bounded parameters, and wire existing dependencies.
+    source_file: scripts/create_pdg_node.py
+    execution: sync
+    affinity: main
+    group: authoring
+    read_only: false
+    destructive: false
+    idempotent: false
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: false
+    input_schema:
+      type: object
+      required: [network_path, node_type]
+      properties:
+        network_path:
+          type: string
+        node_type:
+          type: string
+        node_name:
+          type: string
+        input_nodes:
+          type: array
+          items: {type: string}
+        parameters:
+          type: object
+  - name: connect_pdg_nodes
+    description: Connect a TOP node to an existing upstream dependency.
+    source_file: scripts/connect_pdg_nodes.py
+    execution: sync
+    affinity: main
+    group: graph
+    read_only: false
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [output_node_path, input_node_path]
+      properties:
+        output_node_path:
+          type: string
+        input_node_path:
+          type: string
+        input_index:
+          type: integer
+          minimum: 0
+          default: 0
+        output_index:
+          type: integer
+          minimum: 0
+          default: 0
+  - name: inspect_pdg_graph
+    description: Inspect TOP nodes, graph work-item counts, states, and cook errors.
+    source_file: scripts/inspect_pdg_graph.py
+    execution: sync
+    affinity: main
+    group: inspect
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      required: [node_path]
+      properties:
+        node_path:
+          type: string
+  - name: cook_pdg_graph
+    description: Cook a TOP/PDG graph and return explicit work-item state readback.
+    source_file: scripts/cook_pdg_graph.py
+    execution: async
+    affinity: main
+    timeout_hint_secs: 600
+    group: cook
+    read_only: false
+    destructive: false
+    idempotent: false
+    annotations:
+      read_only_hint: false
+      destructive_hint: false
+      idempotent_hint: false
+    input_schema:
+      type: object
+      required: [node_path]
+      properties:
+        node_path:
+          type: string
+        block:
+          type: boolean
+          default: true

@@ -6,9 +6,9 @@ Progressive loading stages for `dcc-mcp-houdini`. Minimal mode loads **bootstrap
 |-------|--------|----------------|
 | `bootstrap` | `houdini-scripting` | yes |
 | `scene` | `houdini-scene`, `houdini-scene-edit` | `houdini-scene` only |
-| `authoring` | `houdini-nodes`, `houdini-object-ops`, `houdini-parameters`, `houdini-node-graph`, `houdini-geometry`, `houdini-mesh-ops`, `houdini-vex`, `houdini-camera-light`, `houdini-materials`, `houdini-lookdev`, `houdini-material-library`, `houdini-hda`, `houdini-light-rig` | no |
+| `authoring` | `houdini-nodes`, `houdini-object-ops`, `houdini-parameters`, `houdini-node-graph`, `houdini-geometry`, `houdini-mesh-ops`, `houdini-vex`, `houdini-camera-light`, `houdini-materials`, `houdini-lookdev`, `houdini-material-library`, `houdini-hda`, `houdini-light-rig`, `houdini-copernicus` | no |
 | `interchange` | `houdini-interchange`, `houdini-asset-sync`, `houdini-export-preset`, `houdini-import-to-scene`, `houdini-usd-lops` | no |
-| `pipeline` | `houdini-render`, `houdini-karma`, `houdini-husk`, `houdini-animation`, `houdini-chops`, `houdini-constraints`, `houdini-kinefx`, `houdini-hda-automation`, `houdini-pipeline`, `houdini-dev`, `houdini-automation`, `houdini-texture-bake`, `houdini-gsplat-relighting` | no |
+| `pipeline` | `houdini-render`, `houdini-karma`, `houdini-husk`, `houdini-animation`, `houdini-chops`, `houdini-constraints`, `houdini-kinefx`, `houdini-hda-automation`, `houdini-pipeline`, `houdini-dev`, `houdini-automation`, `houdini-texture-bake`, `houdini-gsplat-relighting`, `houdini-simulation`, `houdini-pdg` | no |
 
 ## Common chains
 
@@ -25,6 +25,7 @@ Progressive loading stages for `dcc-mcp-houdini`. Minimal mode loads **bootstrap
 | Inspect & rewire graph | `load_skill("houdini-node-graph")` → `houdini_node_graph__get_connections` → `houdini_node_graph__connect_input` / `houdini_node_graph__disconnect_input` |
 | Create & inspect geometry | `load_skill("houdini-geometry")` → `houdini_geometry__create_primitive` or bounded `houdini_geometry__create_curve_guides` → `houdini_geometry__get_geometry_info` → `houdini_geometry__list_attributes` / `houdini_geometry__list_groups` |
 | Model typed SOP geometry | `load_skill("houdini-mesh-ops")` → `loft_sections` / `lathe_profile` / `extrude_faces` / `bevel_edges` / `bridge_edges` / `boolean_op` / `add_edge_loop` / `array_instances` / `mirror` / `auto_uv` / `uv_project` → inspect returned readback → `houdini_geometry__get_cook_status` |
+| Build a DOP simulation | `load_skill("houdini-simulation")` → `create_simulation_network(simulation_type="pyro"|"flip"|"rbd"|"vellum")` → `configure_simulation_solver` → `inspect_simulation_network` → `validate_simulation_setup` |
 | Create & debug VEX wrangles | `load_skill("houdini-vex")` → `houdini_vex__validate_vex_syntax` → `houdini_vex__create_wrangle` → `houdini_vex__cook_wrangle` → `houdini_vex__diagnose_wrangle` / `houdini_vex__get_vex_info` |
 | Set up cameras & lights | `load_skill("houdini-camera-light")` → `houdini_camera_light__create_camera` → `houdini_camera_light__create_light` → `houdini_camera_light__frame_view` |
 | Three-point studio lighting | `load_skill("houdini-light-rig")` → `create_three_point_light_rig` → `aim_light_at_object` → `set_light_rig_intensity` → `get_lighting_summary` |
@@ -48,9 +49,11 @@ Progressive loading stages for `dcc-mcp-houdini`. Minimal mode loads **bootstrap
 | Revisioned Houdini/Maya sync | `load_skill("houdini-asset-sync")` → `publish_usd_revision` / `read_asset_head` → receiver `sync_usd_revision` or `reference_usd_revision` |
 | Probe / import / export files | `load_skill("houdini-interchange")` → `houdini_interchange__probe_file` → `houdini_interchange__import_geometry` / `houdini_interchange__export_geometry` / `export_alembic` / `export_fbx` / `export_usd` |
 | Inspect a Solaris USD Stage | `load_skill("houdini-usd-lops")` → `houdini_usd_lops__list_stage_prims` → `houdini_usd_lops__get_prim_info` / `houdini_usd_lops__get_prim_attributes` |
+| Build a COP/Copernicus graph | `load_skill("houdini-copernicus")` → `create_cop_network` → `create_cop_node` → `inspect_cop_network` → `validate_cop_network` |
 | Relight Gaussian Splats | `load_skill("houdini-gsplat-relighting")` → `inspect_gsplat_relighting_input` → `prepare_gsplat_sop_chain` → `create_gsplat_relight_lop` → `create_gsplat_copernicus_raster` → existing parameter/render skills |
 | Manage export presets | `load_skill("houdini-export-preset")` → `houdini_export_preset__save_export_preset` → `houdini_export_preset__list_export_presets` → `houdini_export_preset__load_export_preset` |
 | Automate HDA + PDG/ROP | `load_skill("houdini-hda-automation")` → `houdini_hda_automation__scan_hda_libraries` → `houdini_hda_automation__inspect_hda_definition` → `houdini_hda_automation__instantiate_hda` → `houdini_hda_automation__validate_hda` → `houdini_hda_automation__cook_top_network` / `houdini_hda_automation__execute_rop_chain` |
+| Author a PDG/TOP graph | `load_skill("houdini-pdg")` → `create_pdg_network` → `create_pdg_node` → `connect_pdg_nodes` → `inspect_pdg_graph` → `cook_pdg_graph` |
 | Project + shot packaging | `load_skill("houdini-pipeline")` → `houdini_pipeline__set_project` → `houdini_pipeline__validate_scene` → `houdini_pipeline__collect_dependencies` → `houdini_pipeline__export_shot_package` |
 | Develop & debug tools | `load_skill("houdini-dev")` → `houdini_dev__attach_project` → `houdini_dev__reload_modules` → `houdini_dev__run_entrypoint` → `houdini_dev__introspect_hom` / `houdini_dev__start_debugpy` |
 | File-based automation | `load_skill("houdini-automation")` → `houdini_automation__run_python_file` |
