@@ -224,3 +224,51 @@ tools:
           type: boolean
           default: false
           description: Force a recook even when the node is already cooked.
+  - name: get_attribute_values
+    description: Read paged point, primitive, vertex or detail attribute values with explicit truncation.
+    source_file: scripts/get_attribute_values.py
+    execution: sync
+    affinity: main
+    group: geometry-query
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      additionalProperties: false
+      required: [node_path, attribute_name]
+      properties:
+        node_path: {type: string, minLength: 1}
+        attribute_name: {type: string, minLength: 1, maxLength: 256}
+        attribute_class: {type: string, enum: [point, primitive, vertex, detail], default: point}
+        offset: {type: integer, minimum: 0, maximum: 2147483647, default: 0}
+        limit: {type: integer, minimum: 1, maximum: 128, default: 32}
+  - name: get_primitive_intrinsics
+    description: Read bounded primitive intrinsics including packed transforms and bounds.
+    source_file: scripts/get_primitive_intrinsics.py
+    execution: sync
+    affinity: main
+    group: geometry-query
+    read_only: true
+    destructive: false
+    idempotent: true
+    annotations:
+      read_only_hint: true
+      destructive_hint: false
+      idempotent_hint: true
+    input_schema:
+      type: object
+      additionalProperties: false
+      required: [node_path, primitive_index]
+      properties:
+        node_path: {type: string, minLength: 1}
+        primitive_index: {type: integer, minimum: 0, maximum: 2147483647}
+        names:
+          type: array
+          minItems: 1
+          maxItems: 32
+          items: {type: string, minLength: 1, maxLength: 256}

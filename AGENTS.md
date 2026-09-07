@@ -96,7 +96,7 @@ When adding or changing bundled skills, load the project skill:
 | `houdini-object-ops` | `set_pivot`, `rename_node`, `duplicate_node`, `parent_node`, `set_node_flags`, `set_node_lock`, `get_transform`, `set_transform` |
 | `houdini-parameters` | `list_parms`, `get_parms`, `get_parm_templates`, `get_expression`, `set_parms`, `add_spare_parm`, `remove_spare_parm`, `set_expression`, `clear_expression` |
 | `houdini-node-graph` | `get_connections`, `connect_input`, `disconnect_input` |
-| `houdini-geometry` | `create_primitive`, `create_curve_guides`, `get_geometry_info`, `list_attributes`, `list_groups`, `get_cook_status` |
+| `houdini-geometry` | `create_primitive`, `create_curve_guides`, `get_geometry_info`, `list_attributes`, `get_attribute_values`, `get_primitive_intrinsics`, `list_groups`, `get_cook_status` |
 | `houdini-groom` | `build_short_fur_groom` |
 | `houdini-mesh-ops` | `loft_sections`, `lathe_profile`, `extrude_faces`, `bevel_edges`, `inset`, `bridge_edges`, `boolean_op`, `add_edge_loop`, `array_instances`, `mirror`, `auto_uv`, `uv_project`, `transform_geometry`, `merge_geometry`, `blast_geometry`, `group_geometry`, `add_normals`, `triangulate_geometry`, `convert_geometry` |
 | `houdini-vex` | `create_wrangle`, `update_vex_snippet`, `validate_vex_syntax`, `cook_wrangle`, `diagnose_wrangle`, `get_vex_info`, `list_wrangles` |

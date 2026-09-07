@@ -1,36 +1,35 @@
-"""Create or reuse a COP network container."""
+"""Create or reuse a category-checked Cop network."""
 
-from __future__ import annotations
-
-from _cop_common import get_node, hou_missing_error  # noqa: E402
 from dcc_mcp_core.skill import skill_entry, skill_exception, skill_success
+
+from dcc_mcp_houdini._domain_graph import get_node, hou_missing_error, owned_node, require_category, validate_identifier
 
 
 def create_cop_network(parent_path: str, network_name: str = "copnet1") -> dict:
     try:
-        import hou  # noqa: PLC0415
+        import hou
     except ImportError:
         return hou_missing_error()
     try:
+        validate_identifier(network_name)
         parent = get_node(hou, parent_path)
-        network_path = "{}/{}".format(parent.path().rstrip("/"), network_name)
-        network = hou.node(network_path)
-        created = False
-        if network is None:
-            network = parent.createNode("cop2net", node_name=network_name)
-            created = True
-        return skill_success(
-            "Created COP network",
-            network_path=network.path(),
-            network_name=network.name(),
-            created=created,
-        )
+        existing = parent.node(network_name)
+        if existing is not None:
+            require_category(existing, "Cop", children=True)
+            return skill_success(
+                "Reused Cop network", network_path=existing.path(), network_name=existing.name(), created=False
+            )
+        with owned_node(parent, "copnet", network_name) as network:
+            require_category(network, "Cop", children=True)
+            return skill_success(
+                "Created Cop network", network_path=network.path(), network_name=network.name(), created=True
+            )
     except Exception as exc:
-        return skill_exception(exc, message="Failed to create COP network")
+        return skill_exception(exc, message="Failed to create Cop network")
 
 
 @skill_entry
-def main(**kwargs) -> dict:
+def main(**kwargs):
     return create_cop_network(**kwargs)
 
 

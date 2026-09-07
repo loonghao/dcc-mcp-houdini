@@ -20,8 +20,9 @@ metadata:
 
 # houdini-simulation
 
-Typed DOP authoring and validation for the four common Houdini simulation
-families. The skill deliberately separates setup from cooking: an agent can
+Typed DOP skeleton authoring and structural validation for four simulation
+families. This creates a container and solver, not a runnable simulation template.
+Callers must supply object/source geometry, wiring and an output before cooking. The skill deliberately separates setup from cooking: an agent can
 create and inspect a solver network, read back the applied parameters, and
 only then hand the node to a render or automation workflow for a long cook.
 
@@ -42,9 +43,13 @@ creating a different simulation.
 2. `configure_simulation_solver(solver_path="/obj/dopnet1/pyrosolver1", parameters={...})`
 3. `inspect_simulation_network(network_path="/obj/dopnet1")`
 4. `validate_simulation_setup(network_path="/obj/dopnet1", simulation_type="pyro")`
-5. Pass the validated network to the existing render or automation skills for
-   an explicitly requested cook.
+5. Supply the required object/source and output connections, then use the
+   existing render or automation skills for an explicitly requested cook.
 
-Parameter names are validated as Houdini identifiers and applied only when a
-matching parameter exists. The response includes both applied and skipped
-parameters so a caller can detect a Houdini-version mismatch.
+Validation includes child errors and disconnected solvers. It reports its
+structural scope and always leaves `simulation_verified=false`; a cached error
+check cannot establish a successful simulation.
+
+Parameters are checked before writing and read back after writing. Missing
+parameters fail explicitly. Failed edits restore parameter values, expressions
+and animation; failed creation removes only nodes owned by that request.

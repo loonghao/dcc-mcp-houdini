@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from _cop_common import get_node, hou_missing_error, input_connections, node_summary  # noqa: E402
+from _cop_common import require_cop_network
 from dcc_mcp_core.skill import skill_entry, skill_exception, skill_success
+
+from dcc_mcp_houdini._domain_graph import hou_missing_error, input_connections, node_summary
 
 
 def validate_cop_network(network_path: str) -> dict:
@@ -12,7 +14,7 @@ def validate_cop_network(network_path: str) -> dict:
     except ImportError:
         return hou_missing_error()
     try:
-        network = get_node(hou, network_path)
+        network = require_cop_network(hou, network_path)
         errors = []
         warnings = []
         nodes = []
@@ -28,6 +30,8 @@ def validate_cop_network(network_path: str) -> dict:
             "Validated COP network",
             network_path=network.path(),
             valid=not errors and bool(nodes),
+            validation_scope="cached_diagnostics",
+            cooked=False,
             errors=errors,
             warnings=warnings,
             node_count=len(nodes),

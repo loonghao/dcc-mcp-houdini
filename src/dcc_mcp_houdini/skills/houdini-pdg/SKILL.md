@@ -34,5 +34,9 @@ work-item readback.
 5. `cook_pdg_graph(node_path="/obj/topnet1", block=true)`
 
 Node types are passed to Houdini after identifier validation. The cook response
-reports the graph state and work-item counts; it does not infer a successful
+uses `hou.TopNode.getPDGNode().workItems` for the requested task or direct TOP
+children. Uninitialized PDG nodes return unavailable counts. A nonblocking cook
+returns `submitted`; blocking cooks distinguish `completed`, `failed`, and
+`incomplete`, including canceled or failed work items. Cooking is never retried
+with different arguments after an exception. It does not infer a successful
 external artifact without a downstream render or publish verification.
