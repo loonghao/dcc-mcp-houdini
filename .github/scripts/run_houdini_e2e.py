@@ -41,6 +41,24 @@ def _tool_names(payload):
     return [tool.get("name") for tool in result.get("tools", []) if tool.get("name")]
 
 
+def _all_tool_names(url):
+    """Follow MCP tools/list cursors; a first page is not the full catalog."""
+    names = []
+    seen = set()
+    cursor = None
+    for _ in range(256):
+        payload = _post(url, "tools/list", {"cursor": cursor} if cursor else None)
+        assert "result" in payload, payload
+        names.extend(_tool_names(payload))
+        cursor = payload["result"].get("nextCursor")
+        if not cursor:
+            return names
+        if not isinstance(cursor, str) or cursor in seen:
+            raise AssertionError("Invalid or repeated tools/list cursor")
+        seen.add(cursor)
+    raise AssertionError("tools/list exceeded 256 pages")
+
+
 def _find_tool(names, suffix):
     for name in names:
         if name == suffix or name.endswith("__" + suffix):
@@ -144,13 +162,13 @@ def _run_client(server):
     )
     assert initialized["result"]["serverInfo"]["name"] == "dcc-mcp-houdini", initialized
 
-    initial_names = _tool_names(_post(url, "tools/list"))
+    initial_names = _all_tool_names(url)
     load_skill = _find_tool(initial_names, "load_skill")
     for skill_name in ("houdini-scripting", "houdini-nodes", "houdini-kinefx"):
         loaded = _call_tool(url, load_skill, {"skill_name": skill_name})
         assert loaded.get("context", {}).get("loaded") is not False, loaded
 
-    names = _tool_names(_post(url, "tools/list"))
+    names = _all_tool_names(url)
     get_session_info = _find_tool(names, "get_session_info")
     execute_python = _find_tool(names, "execute_python")
     inspect_selection = _find_tool(names, "inspect_selection")
