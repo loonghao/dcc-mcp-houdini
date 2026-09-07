@@ -1,55 +1,56 @@
-"""Create and wire a bounded TOP node."""
+"""Create a Top node with parameter and input readback."""
 
-from __future__ import annotations
-
-from _pdg_common import get_node, hou_missing_error, set_parameters, validate_identifier  # noqa: E402
 from dcc_mcp_core.skill import skill_entry, skill_exception, skill_success
+
+from dcc_mcp_houdini._domain_graph import (
+    get_node,
+    hou_missing_error,
+    input_connections,
+    owned_node,
+    require_category,
+    resolve_inputs,
+    set_parameters,
+    validate_node_type,
+    validate_parameters,
+)
 
 
 def create_pdg_node(
-    network_path: str,
-    node_type: str,
-    node_name: str = None,
-    input_nodes=None,
-    parameters=None,
+    network_path: str, node_type: str, node_name: str = None, input_nodes=None, parameters=None
 ) -> dict:
     try:
-        import hou  # noqa: PLC0415
+        import hou
     except ImportError:
         return hou_missing_error()
     try:
-        network = get_node(hou, network_path)
-        node_type = validate_identifier(node_type, "PDG node type")
-        node = network.createNode(node_type, node_name=node_name)
-        applied, skipped = set_parameters(node, parameters)
-        wired = []
-        for index, input_path in enumerate(input_nodes or []):
-            source = hou.node(input_path)
-            if source is None and not str(input_path).startswith("/"):
-                source = network.node(str(input_path))
-            if source is None:
-                raise ValueError("PDG input node not found: {}".format(input_path))
-            node.setInput(index, source)
-            wired.append({"input_index": index, "source_path": source.path()})
-        try:
-            network.layoutChildren()
-        except Exception:  # noqa: BLE001
-            pass
-        return skill_success(
-            "Created PDG node",
-            network_path=network.path(),
-            node_path=node.path(),
-            node_type=node_type,
-            applied_parameters=applied,
-            skipped_parameters=skipped,
-            wired_inputs=wired,
-        )
+        network = require_category(get_node(hou, network_path), "Top", children=True)
+        node_type = validate_node_type(node_type)
+        validate_parameters(parameters)
+        sources = resolve_inputs(hou, network, input_nodes)
+        with owned_node(network, node_type, node_name) as node:
+            applied, skipped = set_parameters(node, parameters)
+            for index, source in enumerate(sources):
+                node.setInput(index, source)
+            wired = input_connections(node)
+            if [(item["input_index"], item["source_path"]) for item in wired] != list(
+                enumerate(s.path() for s in sources)
+            ):
+                raise RuntimeError("Input wiring readback mismatch")
+            return skill_success(
+                "Created Top node",
+                network_path=network.path(),
+                node_path=node.path(),
+                node_type=node.type().name(),
+                applied_parameters=applied,
+                skipped_parameters=skipped,
+                wired_inputs=wired,
+            )
     except Exception as exc:
-        return skill_exception(exc, message="Failed to create PDG node")
+        return skill_exception(exc, message="Failed to create Top node")
 
 
 @skill_entry
-def main(**kwargs) -> dict:
+def main(**kwargs):
     return create_pdg_node(**kwargs)
 
 

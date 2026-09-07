@@ -1,6 +1,6 @@
 tools:
   - name: create_simulation_network
-    description: Create or reuse a DOP network and a typed Pyro, FLIP, RBD, or Vellum solver.
+    description: Create or reuse a DOP solver skeleton; object sources and wiring are still required.
     source_file: scripts/create_simulation_network.py
     execution: sync
     affinity: main

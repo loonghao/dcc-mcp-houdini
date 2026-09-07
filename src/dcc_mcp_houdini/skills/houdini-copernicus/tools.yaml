@@ -18,7 +18,7 @@ tools:
       properties:
         parent_path:
           type: string
-          description: Parent image context such as /img.
+          description: Existing SOP network such as /obj/geo1; creates a modern copnet.
         network_name:
           type: string
           default: copnet1
@@ -71,7 +71,7 @@ tools:
         network_path:
           type: string
   - name: validate_cop_network
-    description: Validate COP node cook errors and missing input references.
+    description: Inspect cached COP node errors without cooking; reports validation scope.
     source_file: scripts/validate_cop_network.py
     execution: sync
     affinity: main

@@ -2,7 +2,7 @@
 name: houdini-geometry
 description: >-
   Authoring skill — create common SOP primitives or bounded root-to-tip curve
-  guides and inspect SOP geometry: counts, bounds, attributes, groups, and cook
+  guides and inspect SOP geometry: counts, bounds, paged attribute values, primitive intrinsics, groups, and cook
   errors. Use these typed tools to query and seed geometry before custom scripts.
   For mesh edit operations use houdini-mesh-ops.
 license: MIT
@@ -31,7 +31,15 @@ main` because they call `hou`. Prefer these over
   and `create_curve_guides` (bounded inline JSON or JSON-file polyline/NURBS
   guide topology).
 - **`geometry-query`** (read-only except cook): `get_geometry_info`,
-  `list_attributes`, `list_groups`, `get_cook_status`.
+  `list_attributes`, `get_attribute_values`, `get_primitive_intrinsics`,
+  `list_groups`, `get_cook_status`.
+
+`get_attribute_values` supports point, primitive, vertex (linear index), and
+detail classes. Use `next_offset` to page through at most 128 elements per call.
+Each value is bounded to 64 items and 1024 serialized characters and reports
+truncation. `get_primitive_intrinsics` reads up to 32 named properties, including
+packed transforms and bounds. These calls may trigger the SOP's normal cook to
+obtain geometry, but never change geometry or write files.
 
 ## Tracer-bullet flow
 

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from _pdg_common import get_node, graph_snapshot, hou_missing_error  # noqa: E402
+from _pdg_common import graph_snapshot
 from dcc_mcp_core.skill import skill_entry, skill_exception, skill_success
+
+from dcc_mcp_houdini._domain_graph import get_node, hou_missing_error
 
 
 def inspect_pdg_graph(node_path: str) -> dict:

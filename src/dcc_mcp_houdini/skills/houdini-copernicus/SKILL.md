@@ -20,26 +20,28 @@ metadata:
 
 # houdini-copernicus
 
-Typed COP network authoring and inspection. The skill uses Houdini node types
+Typed Copernicus network authoring and inspection (legacy COP2 is rejected). The skill uses Houdini node types
 and parameter readback instead of embedding a large Python recipe, so agents
 can compose the same image-processing graph with the existing node and render
 skills.
 
 ## Supported filter aliases
 
-`file`, `blur`, `composite`, `colorcorrect`, `ramp`, `null`, and `output` are
-mapped to their COP node types. A raw Houdini node type may also be used when
-it matches the safe identifier contract. Unsupported or unavailable node types
+`file`, `blur`, `colorcorrect`, `ramp`, and `null` use their Copernicus names.
+`composite` maps to `blend`, and `output` maps to `rop_image`. A raw Houdini node type may also be used when
+it matches the namespaced node-type contract. Unsupported or unavailable node types
 return a structured error.
 
 ## Tracer-bullet flow
 
-1. `create_cop_network(parent_path="/img", network_name="copnet1")`
-2. `create_cop_node(network_path="/img/copnet1", filter_type="file", parameters={...})`
+1. `create_cop_network(parent_path="/obj/geo1", network_name="copnet1")`
+2. `create_cop_node(network_path="/obj/geo1/copnet1", filter_type="file", parameters={...})`
 3. `create_cop_node(..., filter_type="blur", input_nodes=["file1"], parameters={...})`
-4. `inspect_cop_network(network_path="/img/copnet1")`
-5. `validate_cop_network(network_path="/img/copnet1")`
+4. `inspect_cop_network(network_path="/obj/geo1/copnet1")`
+5. `validate_cop_network(network_path="/obj/geo1/copnet1")`
 
-The response exposes node paths, connection endpoints, applied/skipped
-parameters, and cook errors. It does not claim a rendered image until a
+The response exposes node paths, actual connection endpoints, parameter readback,
+and cached cook errors. Missing parameters fail the request; new nodes are removed
+on failure. Inputs must belong to the same network. Inspection does not cook, so
+validation reports only cached diagnostics. It does not claim a rendered image until a
 downstream render skill verifies an output artifact.
