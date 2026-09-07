@@ -343,7 +343,8 @@ def test_inset_reuses_verified_polyextrude_without_raw_execution() -> None:
     assert result["context"]["readback"]["verified"] is True
 
 
-def test_loft_sections_wires_bounded_same_network_inputs_and_reads_back() -> None:
+@pytest.mark.parametrize("distinct_parent_handles", [False, True])
+def test_loft_sections_wires_bounded_same_network_inputs_and_reads_back(distinct_parent_handles) -> None:
     tools = yaml.safe_load((_SKILL_ROOT / "tools.yaml").read_text(encoding="utf-8"))["tools"]
     contract = next(item for item in tools if item["name"] == "loft_sections")
     sections_schema = contract["input_schema"]["properties"]["sections"]
@@ -360,8 +361,21 @@ def test_loft_sections_wires_bounded_same_network_inputs_and_reads_back() -> Non
         )
         for index in range(3)
     ]
+
+    class ParentHandle:
+        """HOM can return distinct Python wrappers for the same node."""
+
+        def __init__(self, node):
+            self.node = node
+
+        def __eq__(self, other):
+            return isinstance(other, ParentHandle) and self.node is other.node
+
+        def __getattr__(self, name):
+            return getattr(self.node, name)
+
     for section in sections:
-        section._parent = parent
+        section._parent = ParentHandle(parent) if distinct_parent_handles else parent
     by_path = {section.path(): section for section in sections}
     original_create = parent.createNode
 

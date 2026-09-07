@@ -30,7 +30,7 @@ def loft_sections(sections: List[str], node_name: Optional[str] = None) -> dict:
         parent = sources[0].parent()
         if parent is None:
             raise ValueError("First loft section has no parent SOP network")
-        if any(source.parent() is not parent for source in sources[1:]):
+        if any(source.parent() != parent for source in sources[1:]):
             raise ValueError("All loft sections must share one parent SOP network")
         before = geometry_readback(sources[0])
         merge = parent.createNode("merge")
