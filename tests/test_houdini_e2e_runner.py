@@ -69,3 +69,26 @@ def test_headless_e2e_rethrows_worker_failure_on_owner_thread() -> None:
         module._serve_with_client_worker(serve_headless, client, join_timeout=1)
 
     assert observed["stop_signaled"] is True
+
+
+def test_live_e2e_follows_tool_catalog_pagination() -> None:
+    module = _load_script()
+    requests = []
+
+    def post(url, method, params=None):
+        requests.append((method, params))
+        if params is None:
+            return {"result": {"tools": [{"name": "load_skill"}], "nextCursor": "page2"}}
+        assert params == {"cursor": "page2"}
+        return {"result": {"tools": [{"name": "inspect_selection"}]}}
+
+    module._post = post
+    assert module._all_tool_names("http://localhost") == ["load_skill", "inspect_selection"]
+    assert requests == [("tools/list", None), ("tools/list", {"cursor": "page2"})]
+
+
+def test_live_e2e_rejects_repeated_catalog_cursor() -> None:
+    module = _load_script()
+    module._post = lambda *_args: {"result": {"tools": [], "nextCursor": "loop"}}
+    with pytest.raises(AssertionError, match="repeated"):
+        module._all_tool_names("http://localhost")
