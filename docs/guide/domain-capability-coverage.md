@@ -33,7 +33,9 @@ marker is `HOUDINI_CAPABILITY_PROBE_PASSED`. The MCP transport smoke is
 
 - [#238](https://github.com/dcc-mcp/dcc-mcp-houdini/issues/238):
   complete stderr scanning is in [PR #287](https://github.com/dcc-mcp/dcc-mcp-houdini/pull/287).
-  A real procedural-error render that still writes an EXR remains to be reproduced.
+  Real Houdini 22.0.368 acceptance reproduced a zero-exit hair procedural failure
+  with a written EXR; the job correctly reports `completed_with_render_errors`.
+  PR #287 includes the repeatable licensed fixture.
 - [#203](https://github.com/dcc-mcp/dcc-mcp-houdini/issues/203):
   tool pagination is fixed in [PR #288](https://github.com/dcc-mcp/dcc-mcp-houdini/pull/288).
   Licensed local `serve_headless` E2E passed on Houdini 22.0.368 / Core 0.20.14;
@@ -54,4 +56,3 @@ marker is `HOUDINI_CAPABILITY_PROBE_PASSED`. The MCP transport smoke is
   and [ROP Image](https://www.sidefx.com/docs/houdini/nodes/cop/rop_image.html).
 - [Geometry access](https://www.sidefx.com/docs/houdini/hom/hou/Geometry.html)
   and [primitive intrinsics](https://www.sidefx.com/docs/houdini/hom/hou/Prim.html).
-
