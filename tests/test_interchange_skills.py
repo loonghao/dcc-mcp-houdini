@@ -8,6 +8,7 @@ from pathlib import Path
 from types import ModuleType
 from unittest.mock import MagicMock, patch
 
+import pytest
 from skill_loader import skill_script_import_context
 
 _SKILLS_ROOT = Path(__file__).parent.parent / "src" / "dcc_mcp_houdini" / "skills"
@@ -158,14 +159,17 @@ class TestExportAlembic:
 
 
 class TestExportFbx:
-    def test_export_configures_fbx_rop(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize("requested", [None, True, False])
+    def test_export_configures_fbx_rop(self, tmp_path: Path, requested) -> None:
         mod = _load_script("export_fbx.py")
         out = tmp_path / "scene.fbx"
         sopoutput = MagicMock()
         startnode = MagicMock()
+        units = MagicMock()
+        units.set.side_effect = lambda value: setattr(units.eval, "return_value", value)
         rop = _node("/out/fbx_export", "fbx_export", "filmboxfbx")
         rop.parmTuple.return_value = None
-        rop.parm.side_effect = lambda n: {"sopoutput": sopoutput, "startnode": startnode}.get(n)
+        rop.parm.side_effect = lambda n: {"sopoutput": sopoutput, "startnode": startnode, "convertunits": units}.get(n)
         out_net = _node("/out", "out", "ropnet")
         out_net.createNode.return_value = rop
         obj = _node("/obj", "obj")
@@ -173,12 +177,43 @@ class TestExportFbx:
         mock_hou.node.side_effect = lambda p: {"/out": out_net, "/obj": obj}.get(p)
 
         with patch.dict(sys.modules, {"hou": mock_hou}):
-            result = mod.export_fbx(str(out), root_node="/obj", render=False)
+            kwargs = {} if requested is None else {"convert_units": requested}
+            result = mod.export_fbx(str(out), root_node="/obj", render=False, **kwargs)
 
         assert result["success"] is True
         sopoutput.set.assert_called_once_with(str(out))
         startnode.set.assert_called_once_with("/obj")
+        expected = True if requested is None else requested
+        units.set.assert_called_once_with(expected)
+        assert result["context"]["unit_conversion_enabled"] is expected
         assert result["context"]["skipped"] == [str(out)]
+
+    @pytest.mark.parametrize("missing", [True, False])
+    def test_unit_contract_failure_does_not_render(self, tmp_path, missing):
+        mod = _load_script("export_fbx.py")
+        rop = _node("/out/fbx_export", "fbx_export", "filmboxfbx")
+        units = MagicMock()
+        units.eval.return_value = False  # A write that fails to take effect.
+        rop.parm.return_value = None if missing else units
+        parent = _node("/out", "out", "ropnet")
+        parent.createNode.return_value = rop
+        mock_hou = MagicMock()
+        mock_hou.node.return_value = parent
+        output = tmp_path / "never-written.fbx"
+        with patch.dict(sys.modules, {"hou": mock_hou}):
+            result = mod.export_fbx(str(output))
+        assert result["success"] is False
+        rop.render.assert_not_called()
+        rop.destroy.assert_called_once()
+        assert not output.exists()
+
+    def test_rejects_non_boolean_units(self, tmp_path):
+        mod = _load_script("export_fbx.py")
+        mock_hou = MagicMock()
+        with patch.dict(sys.modules, {"hou": mock_hou}):
+            result = mod.export_fbx(str(tmp_path / "bad.fbx"), convert_units="false")
+        assert result["success"] is False
+        mock_hou.node.assert_not_called()
 
 
 class TestExportUsd:

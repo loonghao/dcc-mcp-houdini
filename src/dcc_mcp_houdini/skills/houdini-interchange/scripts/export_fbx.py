@@ -21,8 +21,12 @@ def export_fbx(
     frame_range: Optional[List[float]] = None,
     render: bool = True,
     create_dirs: bool = True,
+    convert_units: bool = True,
 ) -> dict:
     """Create a Filmbox FBX ROP under /out and (optionally) render *root_node*."""
+    if not isinstance(convert_units, bool):
+        return skill_error("Invalid unit conversion", "convert_units must be a boolean")
+    rop = None
     try:
         import hou  # noqa: PLC0415
     except ImportError:
@@ -35,6 +39,15 @@ def export_fbx(
         if out is None:
             out = hou.node("/").createNode("ropnet", node_name="out")
         rop = out.createNode("filmboxfbx", node_name="fbx_export")
+        # Houdini coordinates are normally meters; FBX defaults to centimeters.
+        # Leaving this native toggle off silently shrinks engine imports 100x.
+        unit_parm = rop.parm("convertunits")
+        if unit_parm is None:
+            raise ValueError("Filmbox FBX does not expose the required convertunits parameter")
+        unit_parm.set(convert_units)
+        unit_conversion_enabled = bool(unit_parm.eval())
+        if unit_conversion_enabled != convert_units:
+            raise ValueError("Filmbox FBX unit conversion readback does not match the request")
         used = set_first_parm(rop, ("sopoutput", "filename", "outfile", "output"), output_path)
         # FBX ROP exports the subtree rooted at this node.
         set_first_parm(rop, ("startnode",), root_node)
@@ -57,11 +70,14 @@ def export_fbx(
             rop=node_summary(rop),
             output_path=output_path,
             frame_range=applied_range,
+            unit_conversion_enabled=unit_conversion_enabled,
             written_files=written,
             skipped=skipped,
             warnings=warnings,
         )
     except Exception as exc:
+        if rop is not None:
+            rop.destroy()
         return skill_exception(exc, message="Failed to export FBX")
 
 

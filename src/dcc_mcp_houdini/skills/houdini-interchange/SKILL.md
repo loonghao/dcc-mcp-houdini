@@ -43,6 +43,15 @@ not produce.
 | Rigged/scene to game engine | `export_fbx` | `root_node` selects the `/obj` subtree. |
 | USD/Solaris pipelines | `export_usd` | Exports a LOP node's composed `stage()`; reports `root_layer`. |
 
+`export_fbx` defaults to `convert_units=true`: it enables the native Filmbox
+unit-conversion toggle and reports its readback as `unit_conversion_enabled`.
+Without conversion, a meter-authored object can arrive 100 times too small
+when the FBX declares centimeters. Engines must honor the exported node
+transforms and units once; do not add another factor of 100 after conversion.
+Use `convert_units=false` only for a pipeline intentionally managing numeric
+units itself. An unavailable or mismatched conversion toggle fails before
+rendering. Always verify physical world bounds and pivot in the target engine.
+
 ## Tracer-bullet flow (local, no render farm)
 
 1. `houdini_geometry__create_primitive(parent_path="/obj/geo1", primitive="box")`
