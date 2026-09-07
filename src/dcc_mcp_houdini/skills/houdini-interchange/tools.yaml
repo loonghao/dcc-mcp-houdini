@@ -120,7 +120,8 @@ tools:
   - name: export_fbx
     description: >-
       Export an /obj subtree to FBX via a Filmbox FBX ROP, with optional frame
-      range and render. Reports skipped outputs and runtime limitations.
+      range and render. Enables native scene-unit conversion by default to
+      preserve physical size in engines; reports conversion readback.
     source_file: scripts/export_fbx.py
     execution: async
     affinity: main
@@ -142,6 +143,12 @@ tools:
         root_node:
           type: string
           default: /obj
+        convert_units:
+          type: boolean
+          default: true
+          description: >-
+            Enable Houdini's native scene-unit to FBX-unit conversion. Disable
+            only for a pipeline that deliberately handles numeric units itself.
         frame_range:
           type: array
           items: {type: number}
