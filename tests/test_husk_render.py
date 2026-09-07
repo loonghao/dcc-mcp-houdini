@@ -214,7 +214,8 @@ def test_husk_worker_verifies_written_output(tmp_path: Path) -> None:
     assert status["output_verification"]["state"] == "verified"
 
 
-def test_husk_worker_rejects_verified_output_with_procedural_render_errors(tmp_path: Path) -> None:
+@pytest.mark.parametrize("padding_lines", [0, 10000])
+def test_husk_worker_rejects_verified_output_with_procedural_render_errors(tmp_path: Path, padding_lines: int) -> None:
     worker = _load_script("_husk_worker.py")
     status_path = tmp_path / "status.json"
     stderr_path = tmp_path / "stderr.log"
@@ -234,9 +235,9 @@ def test_husk_worker_rejects_verified_output_with_procedural_render_errors(tmp_p
     def render(*_args, **_kwargs):
         output.write_bytes(b"degraded render")
         stderr_path.write_text(
-            "hou.OperationFailed: Invalid node setup\n"
+            "progress\n" * padding_lines + "hou.OperationFailed: Invalid node setup\n"
             "Error: Missing point attribute pscale\n"
-            "Houdini procedural invocation failed for /World/Hair\n",
+            "Houdini procedural invocation failed for /World/Hair\n" + "progress\n" * padding_lines,
             encoding="utf-8",
         )
         return SimpleNamespace(returncode=0)
@@ -262,6 +263,37 @@ def test_husk_worker_rejects_verified_output_with_procedural_render_errors(tmp_p
     assert status["warnings"] == []
     assert status["written_files"] == [str(output)]
     assert status["output_verification"]["state"] == "verified"
+
+
+def test_husk_diagnostics_scan_bounds_records_and_handles_split_severity(tmp_path: Path) -> None:
+    worker = _load_script("_husk_worker.py")
+    log = tmp_path / "stderr.log"
+    log.write_bytes(
+        b"x" * (worker._STDERR_SCAN_BYTES - 6)
+        + b" hou.OperationFailed: broken setup\n"
+        + b"".join("Error: failure {}\n".format(i).encode() for i in range(100))
+        + b"Warning: render fallback\n"
+    )
+    errors, warnings = worker._file_render_diagnostics(log)
+    assert any(item["code"] == "HOUDINI_OPERATION_FAILED" for item in errors)
+    assert len(errors) == worker._MAX_DIAGNOSTICS
+    assert all(len(item["message"]) <= worker._MAX_DIAGNOSTIC_CHARS for item in errors)
+    assert warnings == [{"code": "RENDERER_WARNING", "message": "Warning: render fallback"}]
+
+
+def test_husk_diagnostics_unreadable_log_is_not_clean(tmp_path: Path) -> None:
+    worker = _load_script("_husk_worker.py")
+    errors, warnings = worker._file_render_diagnostics(tmp_path / "missing.log")
+    assert errors[0]["code"] == "STDERR_SCAN_FAILED"
+    assert warnings == []
+
+
+def test_husk_diagnostics_classifies_before_truncating_messages() -> None:
+    worker = _load_script("_husk_worker.py")
+    errors, warnings = worker._render_diagnostics("prefix " * 300 + "hou.OperationFailed: broken")
+    assert errors[0]["code"] == "HOUDINI_OPERATION_FAILED"
+    assert len(errors[0]["message"]) == worker._MAX_DIAGNOSTIC_CHARS
+    assert warnings == []
 
 
 def test_husk_worker_reports_renderer_warning_without_failing_written_output(tmp_path: Path) -> None:

@@ -46,6 +46,11 @@ hython worker so Karma cannot occupy Houdini's UI thread.
    `render_outcome`, `render_errors`, `warnings`, `written_files`, and
    `output_verification`; verified partial files do not override procedural errors.
 
+Terminal diagnostics scan the completed stderr file using bounded reads, not
+just its display tail. Error/warning lists retain at most 32 records of 1000
+characters each. An unreadable configured stderr log reports `STDERR_SCAN_FAILED`
+and cannot establish a clean render. Polling still returns compact log tails.
+
 `use_hython_fallback=true` is rejected because in-process rendering can freeze
 the Houdini event loop. Export a USD snapshot and use the isolated native Husk
 path instead.

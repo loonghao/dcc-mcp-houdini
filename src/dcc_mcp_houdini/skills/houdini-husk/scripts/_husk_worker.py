@@ -33,24 +33,46 @@ def _written_files(status: dict) -> list:
     return written
 
 
-def _bounded_stderr(path_value) -> str:
+def _file_render_diagnostics(path_value):
+    """Scan the completed log with bounded reads and bounded diagnostic storage.
+
+    A tail is sufficient for display, but cannot establish a clean render.
+    Snapshot the file length so a growing log cannot make this scan unbounded.
+    Long lines retain overlap so severity tokens across read boundaries survive.
+    """
+    errors, warnings = [], []
     if not path_value:
-        return ""
+        return errors, warnings
     try:
         with Path(str(path_value)).open("rb") as stream:
-            stream.seek(0, os.SEEK_END)
-            stream.seek(max(0, stream.tell() - _STDERR_SCAN_BYTES))
-            payload = stream.read(_STDERR_SCAN_BYTES)
-    except OSError:
-        return ""
-    return payload.decode("utf-8", errors="replace")
+            remaining = os.fstat(stream.fileno()).st_size
+            overlap = b""
+            while remaining:
+                payload = stream.readline(min(remaining, _STDERR_SCAN_BYTES))
+                if not payload:
+                    raise OSError("Husk stderr changed during diagnostics scan")
+                remaining -= len(payload)
+                fragment = overlap + payload
+                found = _render_diagnostics(fragment.decode("utf-8", errors="replace"))
+                for target, items in zip((errors, warnings), found):
+                    for item in items:
+                        if len(target) < _MAX_DIAGNOSTICS and item not in target:
+                            target.append(item)
+                overlap = b"" if payload.endswith(b"\n") else fragment[-_MAX_DIAGNOSTIC_CHARS:]
+    except OSError as exc:
+        diagnostic = {"code": "STDERR_SCAN_FAILED", "message": str(exc)[:_MAX_DIAGNOSTIC_CHARS]}
+        if len(errors) >= _MAX_DIAGNOSTICS:
+            errors[-1] = diagnostic
+        else:
+            errors.append(diagnostic)
+    return errors, warnings
 
 
 def _render_diagnostics(stderr: str):
     render_errors = []
     warnings = []
     for raw_line in stderr.splitlines():
-        message = " ".join(raw_line.split())[:_MAX_DIAGNOSTIC_CHARS]
+        message = " ".join(raw_line.split())
         if not message:
             continue
         if "hou.OperationFailed" in message:
@@ -67,7 +89,7 @@ def _render_diagnostics(stderr: str):
             code = "RENDERER_WARNING"
         else:
             continue
-        diagnostic = {"code": code, "message": message}
+        diagnostic = {"code": code, "message": message[:_MAX_DIAGNOSTIC_CHARS]}
         if diagnostic not in target and len(target) < _MAX_DIAGNOSTICS:
             target.append(diagnostic)
     return render_errors, warnings
@@ -91,7 +113,7 @@ def main() -> None:
             check=False,
         )
         written_files = _written_files(status)
-        render_errors, warnings = _render_diagnostics(_bounded_stderr(status.get("stderr_path")))
+        render_errors, warnings = _file_render_diagnostics(status.get("stderr_path"))
         if process.returncode != 0:
             state = "failed"
             render_outcome = "failed"
